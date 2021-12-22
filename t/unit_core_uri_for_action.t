@@ -75,10 +75,6 @@ my $context = TestApp->new( {
                 namespace => 'yada',
               } );
 
-is($context->uri_for($context->controller('Action::Chained')->action_for('endpoint'), [ 1 ]),
-   'http://127.0.0.1/foo/chained/foo/1/end',
-   "uri_for a controller and action");
-
 is( $context->uri_for_action( '/action/chained/endpoint', [ 1 ] ),
     'http://127.0.0.1/foo/chained/foo/1/end',
     "uri_for a controller and action as string");
@@ -94,25 +90,6 @@ is(TestApp->uri_for_action('/action/chained/endpoint', [ 1 ] ),
 is(TestApp->uri_for_action(  $chained_action, [ 1 ]),
     '/chained/foo/1/end',
     "uri_for action via dispatcher, called with only class name");
-
-is($context->uri_for($context->controller('Action')),
-   "http://127.0.0.1/foo/yada/action/",
-   "uri_for a controller");
-
-is($context->uri_for($path_action),
-   "http://127.0.0.1/foo/action/relative/relative",
-   "uri_for correct for path action");
-
-is($context->uri_for($path_action, qw/one two/, { q => 1 }),
-   "http://127.0.0.1/foo/action/relative/relative/one/two?q=1",
-   "uri_for correct for path action with args and query");
-
-ok(!defined($context->uri_for($path_action, [ 'blah' ])),
-   "no URI returned by uri_for for Path action with snippets");
-
-is($context->uri_for($chained_action, [ 1 ], 2, { q => 1 }),
-   "http://127.0.0.1/foo/chained/foo/1/end/2?q=1",
-   "uri_for correct for chained with captures, args and query");
 
 #
 #   More Chained with Context Tests

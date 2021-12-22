@@ -18,28 +18,6 @@ my $context = TestApp->new( {
               } );
 
 is(
-    Catalyst::uri_for( $context, '/bar/baz' )->as_string,
-    'http://127.0.0.1/foo/bar/baz',
-    'URI for absolute path'
-);
-
-is(
-    Catalyst::uri_for( $context, 'bar/baz' )->as_string,
-    'http://127.0.0.1/foo/yada/bar/baz',
-    'URI for relative path'
-);
-
-is(
-    Catalyst::uri_for( $context, '', 'arg1', 'arg2' )->as_string,
-    'http://127.0.0.1/foo/yada/arg1/arg2',
-    'URI for undef action with args'
-);
-
-
-is( Catalyst::uri_for( $context, '../quux' )->as_string,
-    'http://127.0.0.1/foo/quux', 'URI for relative dot path' );
-
-is(
     Catalyst::uri_for( $context, 'quux', { param1 => 'value1' } )->as_string,
     'http://127.0.0.1/foo/yada/quux?param1=value1',
     'URI for undef action with query params'
@@ -66,57 +44,10 @@ is(
 );
 
 is(
-    Catalyst::uri_for( $context, '/bar#fragment', { param1 => 'value1' } )->as_string,
-    'http://127.0.0.1/foo/bar?param1=value1#fragment',
-    'URI for path with fragment and query params 1'
-);
-
-is(
     Catalyst::uri_for( $context, '/bar', { param1 => 'value1' }, \'fragment' )->as_string,
     'http://127.0.0.1/foo/bar?param1=value1#fragment',
     'URI for path with fragment and query params 1'
 );
-
-is(
-    Catalyst::uri_for( $context, '0#fragment', { param1 => 'value1' } )->as_string,
-    'http://127.0.0.1/foo/yada/0?param1=value1#fragment',
-    'URI for path 0 with fragment and query params 1'
-);
-
-is(
-    Catalyst::uri_for( $context, '/bar#fragment^%$', { param1 => 'value1' } )->as_string,
-    'http://127.0.0.1/foo/bar?param1=value1#fragment^%$',
-    'URI for path with fragment and query params 3'
-);
-
-is(
-    Catalyst::uri_for( $context, '/foo#bar/baz', { param1 => 'value1' } )->as_string,
-    'http://127.0.0.1/foo/foo?param1=value1#bar/baz',
-    'URI for path with fragment and query params 3'
-);
-
-is(
-    Catalyst::uri_for( 'TestApp', '/bar/baz' )->as_string,
-    '/bar/baz',
-    'URI for absolute path, called with only class name'
-);
-
-## relative action (or path) doesn't make sense when calling as class method
-# is(
-#     Catalyst::uri_for( 'TestApp', 'bar/baz' )->as_string,
-#     '/yada/bar/baz',
-#     'URI for relative path, called with only class name'
-# );
-
-is(
-    Catalyst::uri_for( 'TestApp', '/', 'arg1', 'arg2' )->as_string,
-    '/arg1/arg2',
-    'URI for root action with args, called with only class name'
-);
-
-## relative action (or path) doesn't make sense when calling as class method
-# is( Catalyst::uri_for( 'TestApp', '../quux' )->as_string,
-#     '/quux', 'URI for relative dot path, called with only class name' );
 
 is(
     Catalyst::uri_for( 'TestApp', '/quux', { param1 => 'value1' } )->as_string,
@@ -127,11 +58,6 @@ is(
 is (Catalyst::uri_for( 'TestApp', '/bar/wibble?' )->as_string,
    '/bar/wibble%3F', 'Question Mark gets encoded, called with only class name'
 );
-
-## relative action (or path) doesn't make sense when calling as class method
-# is( Catalyst::uri_for( 'TestApp', qw/bar wibble?/, 'with space' )->as_string,
-#     '/yada/bar/wibble%3F/with%20space', 'Space gets encoded, called with only class name'
-# );
 
 is(
     Catalyst::uri_for( 'TestApp', '/bar', 'with+plus', { 'also' => 'with+plus' })->as_string,
@@ -144,15 +70,6 @@ is(
     '/bar/with%20space?also+with=space+here',
     'Spaces encoded correctly, called with only class name'
 );
-
-TODO: {
-    local $TODO = 'broken by 5.7008';
-    is(
-        Catalyst::uri_for( $context, '/bar#fragment', { param1 => 'value1' } )->as_string,
-        'http://127.0.0.1/foo/bar?param1=value1#fragment',
-        'URI for path with fragment and query params'
-    );
-}
 
 # test with utf-8
 is(
@@ -173,33 +90,6 @@ is(
     'URI for undef action with query param as object'
   );
 
-# test with empty arg
-{
-    my @warnings;
-    local $SIG{__WARN__} = sub { push @warnings, @_ };
-    is(
-       Catalyst::uri_for( $context )->as_string,
-       'http://127.0.0.1/foo/yada',
-       'URI with no action'
-      );
-
-    is(
-       Catalyst::uri_for( $context, 0 )->as_string,
-       'http://127.0.0.1/foo/yada/0',
-       'URI with 0 path'
-      );
-
-    is_deeply(\@warnings, [], "No warnings with no path argument");
-}
-
-$request->base( URI->new('http://localhost:3000/') );
-$request->match( 'orderentry/contract' );
-is(
-    Catalyst::uri_for( $context, '/Orderentry/saveContract' )->as_string,
-    'http://localhost:3000/Orderentry/saveContract',
-    'URI for absolute path'
-);
-
 {
     $request->base( URI->new('http://127.0.0.1/') );
 
@@ -207,11 +97,6 @@ is(
 
     is( Catalyst::uri_for( $context, '/bar/baz' )->as_string,
         'http://127.0.0.1/bar/baz', 'URI with no base or match' );
-
-    # test "0" as the path
-    is( Catalyst::uri_for( $context, qw/0 foo/ )->as_string,
-        'http://127.0.0.1/0/foo', '0 as path is ok'
-    );
 
 }
 
@@ -222,31 +107,6 @@ is(
 
     Catalyst::uri_for( $context, '/bar/baz', { foo => undef } )->as_string,
     is( $warnings, 0, "no warnings emitted" );
-}
-
-# Test with parameters '/', 'foo', 'bar' - should not generate a //
-is( Catalyst::uri_for( $context, qw| / foo bar | )->as_string,
-    'http://127.0.0.1/foo/bar', 'uri is /foo/bar, not //foo/bar'
-);
-
-TODO: {
-    local $TODO = 'RFCs are for people who, erm - fix this test..';
-    # Test rfc3986 reserved characters.  These characters should all be escaped
-    # according to the RFC, but it is a very big feature change so I've removed it
-    no warnings; # Yes, everything in qw is sane
-    is(
-        Catalyst::uri_for( $context, qw|! * ' ( ) ; : @ & = $ / ? % # [ ] ,|, )->as_string,
-        'http://127.0.0.1/%21/%2A/%27/%2B/%29/%3B/%3A/%40/%26/%3D/%24/%2C/%2F/%3F/%25/%23/%5B/%5D',
-        'rfc 3986 reserved characters'
-    );
-
-    # jshirley bug - why the hell does only one of these get encoded
-    #                has been like this forever however.
-    is(
-        Catalyst::uri_for( $context, qw|{1} {2}| )->as_string,
-        'http://127.0.0.1/{1}/{2}',
-        'not-escaping unreserved characters'
-    );
 }
 
 # make sure caller's query parameter hash isn't messed up
