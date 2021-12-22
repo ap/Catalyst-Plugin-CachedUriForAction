@@ -1,12 +1,10 @@
 use strict;
 use warnings;
 
-use FindBin;
-use lib "$FindBin::Bin/../lib";
-
 use Test::More;
 
-use_ok('TestApp');
+use lib 't/lib';
+use TestApp;
 
 my $dispatcher = TestApp->dispatcher;
 

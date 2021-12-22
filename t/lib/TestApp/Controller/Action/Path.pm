@@ -1,7 +1,7 @@
 package TestApp::Controller::Action::Path;
 
 use strict;
-use base 'TestApp::Controller::Action';
+use base 'Catalyst::Controller';
 
 __PACKAGE__->config(
     actions => {

@@ -1,11 +1,11 @@
 use strict;
 use warnings;
-use FindBin qw/$Bin/;
-use lib "$FindBin::Bin/../lib";
+
 use Test::More;
 use URI;
 
-use_ok('TestApp');
+use lib 't/lib';
+use TestApp;
 
 my $request = Catalyst::Request->new( {
                 _log => Catalyst::Log->new,

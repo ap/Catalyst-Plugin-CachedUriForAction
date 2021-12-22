@@ -1,12 +1,11 @@
 use utf8;
 use strict;
 use warnings;
-use FindBin;
-use lib "$FindBin::Bin/../lib";
 
 use Test::More;
 
-use_ok('TestApp');
+use lib 't/lib';
+use TestApp;
 
 my $base = 'http://127.0.0.1';
 

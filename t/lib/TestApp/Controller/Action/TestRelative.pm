@@ -1,7 +1,7 @@
 package TestApp::Controller::Action::TestRelative;
 
 use strict;
-use base 'TestApp::Controller::Action';
+use base 'Catalyst::Controller';
 
 __PACKAGE__->config(
   path => 'action/relative'
