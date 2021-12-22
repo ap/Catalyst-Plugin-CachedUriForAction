@@ -27,23 +27,22 @@ $uri_with_multibyte->query_form(
 );
 
 # multibyte with utf8 bytes
-is($context->uri_for('/', { name => '村瀬大輔' }), $uri_with_multibyte, 'uri_for with utf8 bytes query');
+is($context->uri_for_action('/chain_root_index', { name => '村瀬大輔' }), $uri_with_multibyte, 'uri_for with utf8 bytes query');
 
 # multibyte with utf8 string
-is($context->uri_for('/', { name => "\x{6751}\x{702c}\x{5927}\x{8f14}" }), $uri_with_multibyte, 'uri_for with utf8 string query');
+is($context->uri_for_action('/chain_root_index', { name => "\x{6751}\x{702c}\x{5927}\x{8f14}" }), $uri_with_multibyte, 'uri_for with utf8 string query');
 
 # multibyte captures and args
-my $action = $context->controller('Action::Chained')
-    ->action_for('roundtrip_urifor_end');
+my $action = '/action/chained/roundtrip_urifor_end';
 
-is($context->uri_for($action, ['hütte'], 'hütte', {
+is($context->uri_for_action($action, ['hütte'], 'hütte', {
     test => 'hütte'
 }),
 'http://127.0.0.1/chained/roundtrip_urifor/h%C3%BCtte/h%C3%BCtte?test=h%C3%BCtte',
 'uri_for with utf8 captures and args');
 
 is(
-  $context->uri_for($action, ['♥'], '♥', { '♥' => '♥'}),
+  $context->uri_for_action($action, ['♥'], '♥', { '♥' => '♥'}),
   'http://127.0.0.1/chained/roundtrip_urifor/' . '%E2%99%A5' . '/' . '%E2%99%A5' . '?' . '%E2%99%A5' . '=' . '%E2%99%A5',
     'uri_for with utf8 captures and args');
 

@@ -6,60 +6,50 @@ use Test::More;
 use lib 't/lib';
 use TestApp;
 
-my $dispatcher = TestApp->dispatcher;
-
 #
 #   Private Action
 #
-my $private_action = $dispatcher->get_action_by_path(
-                       '/class_forward_test_method'
-                     );
+my $private_action = '/class_forward_test_method';
 
-ok(!defined($dispatcher->uri_for_action($private_action)),
+is(eval{ TestApp->uri_for_action($private_action) }, undef,
    "Private action returns undef for URI");
 
 #
 #   Path Action
 #
-my $path_action = $dispatcher->get_action_by_path(
-                    '/action/testrelative/relative'
-                  );
+my $path_action = '/action/testrelative/relative';
 
-is($dispatcher->uri_for_action($path_action), "/action/relative/relative",
+is(TestApp->uri_for_action($path_action), "/action/relative/relative",
    "Public path action returns correct URI");
 
-ok(!defined($dispatcher->uri_for_action($path_action, [ 'foo' ])),
+is(eval{ TestApp->uri_for_action($path_action, [ 'foo' ]) }, undef,
    "no URI returned for Path action when snippets are given");
 
 #
 #   Index Action
 #
-my $index_action = $dispatcher->get_action_by_path(
-                     '/action/index/index'
-                   );
+my $index_action = '/action/index/index';
 
-ok(!defined($dispatcher->uri_for_action($index_action, [ 'foo' ])),
+is(eval{ TestApp->uri_for_action($index_action, [ 'foo' ]) }, undef,
    "no URI returned for index action when snippets are given");
 
-is($dispatcher->uri_for_action($index_action),
+is(TestApp->uri_for_action($index_action),
    "/action/index",
    "index action returns correct path");
 
 #
 #   Chained Action
 #
-my $chained_action = $dispatcher->get_action_by_path(
-                       '/action/chained/endpoint',
-                     );
+my $chained_action = '/action/chained/endpoint';
 
-ok(!defined($dispatcher->uri_for_action($chained_action)),
+is(eval{ TestApp->uri_for_action($chained_action) }, undef,
    "Chained action without captures returns undef");
 
-ok(!defined($dispatcher->uri_for_action($chained_action, [ 1, 2 ])),
+is(eval{ TestApp->uri_for_action($chained_action, [ 1, 2 ], 1) }, undef,
    "Chained action with too many captures returns undef");
 
-is($dispatcher->uri_for_action($chained_action, [ 1 ]),
-   "/chained/foo/1/end",
+is(TestApp->uri_for_action($chained_action, [ 1 ], 1),
+   "/chained/foo/1/end/1",
    "Chained action with correct captures returns correct path");
 
 #
@@ -75,20 +65,20 @@ my $context = TestApp->new( {
                 namespace => 'yada',
               } );
 
-is( $context->uri_for_action( '/action/chained/endpoint', [ 1 ] ),
-    'http://127.0.0.1/foo/chained/foo/1/end',
+is( $context->uri_for_action( '/action/chained/endpoint', [ 1 ], 1 ),
+    'http://127.0.0.1/foo/chained/foo/1/end/1',
     "uri_for a controller and action as string");
 
-is(TestApp->uri_for_action($context->controller('Action::Chained')->action_for('endpoint'), [ 1 ]),
-    '/chained/foo/1/end',
+is(TestApp->uri_for_action($context->controller('Action::Chained')->action_for('endpoint'), [ 1 ], 1),
+    '/chained/foo/1/end/1',
     "uri_for a controller and action, called with only class name");
 
-is(TestApp->uri_for_action('/action/chained/endpoint', [ 1 ] ),
-    '/chained/foo/1/end',
+is(TestApp->uri_for_action('/action/chained/endpoint', [ 1 ], 1 ),
+    '/chained/foo/1/end/1',
     "uri_for a controller and action as string, called with only class name");
 
-is(TestApp->uri_for_action(  $chained_action, [ 1 ]),
-    '/chained/foo/1/end',
+is(TestApp->uri_for_action( $chained_action, [ 1 ], 1 ),
+    '/chained/foo/1/end/1',
     "uri_for action via dispatcher, called with only class name");
 
 #
@@ -113,7 +103,7 @@ is(TestApp->uri_for_action(  $chained_action, [ 1 ]),
 
     my $action_needs_two = '/action/chained/endpoint2';
 
-    ok( ! defined( $context->uri_for_action($action_needs_two, [1],     (2,3)) ),
+    is( eval { $context->uri_for_action($action_needs_two, [1],     (2,3)) }, undef,
         'uri_for_action returns undef for not enough captures' );
 
     is( $context->uri_for_action($action_needs_two,            [1,2],   (2,3)),
@@ -124,23 +114,19 @@ is(TestApp->uri_for_action(  $chained_action, [ 1 ]),
         'http://127.0.0.1/foo/chained/foo2/1/2/end2/2/3',
         'uri_for_action returns correct uri for correct captures and args combined' );
 
-    ok( ! defined( $context->uri_for_action($action_needs_two, [1,2,3], (2,3)) ),
+    is( eval { $context->uri_for_action($action_needs_two, [1,2,3], (2,3)) }, undef,
         'uri_for_action returns undef for too many captures' );
 
-    is( $context->uri_for_action($action_needs_two, [1,2],   (3)),
-        'http://127.0.0.1/foo/chained/foo2/1/2/end2/3',
+    is( eval { $context->uri_for_action($action_needs_two, [1,2],   (3)) }, undef,
         'uri_for_action returns uri with lesser args than specified on action' );
 
-    is( $context->uri_for_action($action_needs_two, [1,2,3]),
-        'http://127.0.0.1/foo/chained/foo2/1/2/end2/3',
+    is( eval { $context->uri_for_action($action_needs_two, [1,2,3]) }, undef,
         'uri_for_action returns uri with lesser args than specified on action with captures combined' );
 
-    is( $context->uri_for_action($action_needs_two, [1,2],   (3,4,5)),
-        'http://127.0.0.1/foo/chained/foo2/1/2/end2/3/4/5',
+    is( eval { $context->uri_for_action($action_needs_two, [1,2],   (3,4,5)) }, undef,
         'uri_for_action returns uri with more args than specified on action' );
 
-    is( $context->uri_for_action($action_needs_two, [1,2,3,4,5]),
-        'http://127.0.0.1/foo/chained/foo2/1/2/end2/3/4/5',
+    is( eval { $context->uri_for_action($action_needs_two, [1,2,3,4,5]) }, undef,
         'uri_for_action returns uri with more args than specified on action with captures combined' );
 
     is( $context->uri_for_action($action_needs_two, [1,''], (3,4)),
