@@ -16,6 +16,7 @@ my %META = (
 		)} },
 		test => { requires => {qw(
 			Test::More           0.88
+			URI                     0
 		)} },
 	},
 	dynamic_config => 0,
