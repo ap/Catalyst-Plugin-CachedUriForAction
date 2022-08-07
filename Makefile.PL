@@ -1,7 +1,8 @@
 use 5.008005; # min Perl req for URI::Encode::XS
 use strict; use warnings;
 
-my $u = 'github.com/ap/Catalyst-Plugin-CachedUriForAction';
+my $sc = q<https://github.com/ap/Catalyst-Plugin-CachedUriForAction>;
+my $bt = q<https://rt.cpan.org/Public/Dist/Display.html?Name=Catalyst-Plugin-CachedUriForAction>;
 
 my %META = (
 	name        => 'Catalyst-Plugin-CachedUriForAction',
@@ -22,8 +23,9 @@ my %META = (
 	},
 	dynamic_config => 0,
 	resources      => {
-		repository => { type => 'git', url => "git://$u.git", web => "https://$u" },
-		bugtracker => { web => "https://$u/issues" },
+		license    => [ 'http://dev.perl.org/licenses/' ],
+		repository => { type => 'git', url => "$sc.git", web => $sc },
+		bugtracker => { web => $bt },
 	},
 );
 
