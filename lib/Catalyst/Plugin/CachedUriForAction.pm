@@ -35,7 +35,7 @@ sub uri_for_action {
 	my $cache = $c->dispatcher && $c->dispatcher->{(CACHE_KEY)}
 		or return $c->next::method( @_ ); # fall back if called too early
 
-	my $action     = shift;
+	my $action   = shift;
 	my $captures = @_ && 'ARRAY'  eq ref $_[0]  ? shift : [];
 	my $fragment = @_ && 'SCALAR' eq ref $_[-1] ? pop   : undef;
 	my $params   = @_ && 'HASH'   eq ref $_[-1] ? pop   : undef;
