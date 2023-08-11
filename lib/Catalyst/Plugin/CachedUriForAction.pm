@@ -14,14 +14,13 @@ sub setup_finalize {
 	my $c = shift;
 	$c->maybe::next::method( @_ );
 
-	my $dispatcher = $c->dispatcher;
-	my $cache = \%{ $dispatcher->{(CACHE_KEY)} };
+	my $cache = \%{ $c->dispatcher->{(CACHE_KEY)} };
 	for my $action ( values %{ $c->dispatcher->_action_hash } ) {
-		my $xa = $dispatcher->expand_action( $action );
+		my $xa = $c->dispatcher->expand_action( $action );
 		my $n_caps = $xa->number_of_captures;
 
 		# not an action that a request can be dispatched to?
-		next if not defined $dispatcher->uri_for_action( $action, [ ('dummy') x $n_caps ] );
+		next if not defined $c->dispatcher->uri_for_action( $action, [ ('dummy') x $n_caps ] );
 
 		my $n_args = $xa->number_of_args; # might be undef to mean "any number"
 		my $tmpl = $c->uri_for( $action, [ ("\0\0\0\0") x $n_caps ], ("\0\0\0\0") x ( $n_args || 0 ) );
@@ -33,8 +32,7 @@ sub setup_finalize {
 sub uri_for_action {
 	my $c = shift;
 
-	my $dispatcher = $c->dispatcher;
-	my $cache = $dispatcher && $dispatcher->{(CACHE_KEY)}
+	my $cache = $c->dispatcher && $c->dispatcher->{(CACHE_KEY)}
 		or return $c->next::method( @_ ); # fall back if called too early
 
 	my $action     = shift;
@@ -42,7 +40,7 @@ sub uri_for_action {
 	my $fragment = @_ && 'SCALAR' eq ref $_[-1] ? pop   : undef;
 	my $params   = @_ && 'HASH'   eq ref $_[-1] ? pop   : undef;
 
-	$action = '/' . $dispatcher->get_action_by_path( $action )->reverse
+	$action = '/' . $c->dispatcher->get_action_by_path( $action )->reverse
 		if ref $action
 		and do { local $@; eval { $action->isa( 'Catalyst::Action' ) } };
 
