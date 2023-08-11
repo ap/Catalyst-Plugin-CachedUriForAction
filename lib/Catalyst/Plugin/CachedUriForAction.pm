@@ -2,7 +2,7 @@ use 5.008005; use strict; use warnings;
 
 package Catalyst::Plugin::CachedUriForAction;
 
-our $VERSION = '1.003';
+our $VERSION = '1.004';
 
 use Moose::Role;
 use Class::MOP::Class ();
