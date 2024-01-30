@@ -4,16 +4,17 @@ package Catalyst::Plugin::CachedUriForAction;
 
 our $VERSION = '1.004';
 
-use Moose::Role;
-use Class::MOP::Class ();
+use mro;
 use Carp ();
 use URI::Encode::XS 'uri_encode_utf8';
 
-after setup_finalize => sub {
+sub CACHE_KEY () { __PACKAGE__ . '::action_uri_info' }
+
+sub setup_finalize {
 	my $c = shift;
+	$c->maybe::next::method( @_ );
 
-	my %cache;
-
+	my $cache = \%{ $c->dispatcher->{(CACHE_KEY)} };
 	for my $action ( values %{ $c->dispatcher->_action_hash } ) {
 		my $xa = $c->dispatcher->expand_action( $action );
 		my $n_caps = $xa->number_of_captures;
@@ -24,23 +25,27 @@ after setup_finalize => sub {
 		my $n_args = $xa->number_of_args; # might be undef to mean "any number"
 		my $tmpl = $c->uri_for( $action, [ ("\0\0\0\0") x $n_caps ], ("\0\0\0\0") x ( $n_args || 0 ) );
 		my @part = split /%00%00%00%00/, $tmpl, -1;
-		$cache{ '/' . $action->reverse } = [ $n_caps, $n_args, ( shift @part ), \@part ];
+		$cache->{ '/' . $action->reverse } = [ $n_caps, $n_args, ( shift @part ), \@part ];
 	}
+}
 
-	Class::MOP::Class->initialize( $c )->add_around_method_modifier( uri_for_action => sub {
-	########################################################################
-	shift;
-	my $c        = shift;
+sub uri_for_action {
+	my $c = shift;
+
+	my $dispatcher = $c->dispatcher;
+	my $cache = $dispatcher && $dispatcher->{(CACHE_KEY)}
+		or return $c->next::method( @_ ); # fall back if called too early
+
 	my $action   = shift;
 	my $captures = @_ && 'ARRAY'  eq ref $_[0]  ? shift : [];
 	my $fragment = @_ && 'SCALAR' eq ref $_[-1] ? pop   : undef;
 	my $params   = @_ && 'HASH'   eq ref $_[-1] ? pop   : undef;
 
-	$action = '/' . $c->dispatcher->get_action_by_path( $action )->reverse
+	$action = '/' . $dispatcher->get_action_by_path( $action )->reverse
 		if ref $action
 		and do { local $@; eval { $action->isa( 'Catalyst::Action' ) } };
 
-	my $info = $cache{ $action }
+	my $info = $cache->{ $action }
 		or Carp::croak "Can't find action for path '$action' in uri_for_action";
 
 	my ( $n_caps, $n_args, $path, $extra_parts ) = @$info;
@@ -117,14 +122,9 @@ after setup_finalize => sub {
 	}
 
 	$uri_obj;
-	########################################################################
-	} );
-
-};
+}
 
 BEGIN { delete $Catalyst::Plugin::CachedUriForAction::{'uri_encode_utf8'} }
-
-no Moose::Role;
 
 1;
 
