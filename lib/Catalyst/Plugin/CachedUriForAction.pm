@@ -25,6 +25,7 @@ sub setup_finalize {
 		my $n_args = $xa->number_of_args; # might be undef to mean "any number"
 		my $tmpl = $c->uri_for( $action, [ ("\0\0\0\0") x $n_caps ], ("\0\0\0\0") x ( $n_args || 0 ) );
 		my ( $prefix, @part ) = split /%00%00%00%00/, $tmpl, -1;
+		$prefix =~ s!\A/!!;
 		$cache->{ '/' . $action->reverse } = [ $n_caps, $n_args, \@part, $prefix ];
 	}
 }
@@ -48,8 +49,17 @@ sub uri_for_action {
 	my $info = $cache->{ $action }
 		or Carp::croak "Can't find action for path '$action' in uri_for_action";
 
+	my ( $path, $base ) = '';
+	if ( ref $c ) {
+		$base = $c->request->base;
+		$path = '/' if $$base !~ m!/\z!;
+	} else { # fallback if called as class method
+		$base = bless \( my $tmp = '' ), 'URI::_generic';
+		$path = '/';
+	}
+
 	my ( $n_caps, $n_args, $extra_parts ) = @$info;
-	my $path = $info->[-1];
+	$path .= $info->[-1];
 
 	# this is not very sensical but it has to be like this because it is what Catalyst does:
 	# the :Args() case (i.e. any number of args) is grouped with the :Args(0) case (i.e. no args)
@@ -86,14 +96,7 @@ sub uri_for_action {
 	}
 
 	$path =~ s/%2B/+/g;
-
-	my $uri_obj = ref $c ? do {
-		my $base = $c->request->base;
-		( my $uri = $$base ) =~ s!/?\z!$path!;
-		bless \$uri, ref $base;
-	} : do { # fallback if called as class method
-		bless \$path, 'URI::_generic';
-	};
+	substr $path, 0, 0, $$base;
 
 	if ( defined $params ) {
 		my $query = '';
@@ -114,15 +117,15 @@ sub uri_for_action {
 		}
 		if ( '' ne $query ) {
 			$query =~ s/%20/+/g;
-			( $$uri_obj .= '?' ) .= substr $query, length $delim;
+			( $path .= '?' ) .= substr $query, length $delim;
 		}
 	}
 
 	if ( defined $fragment ) {
-		( $$uri_obj .= '#' ) .= uri_encode_utf8 $$fragment;
+		( $path .= '#' ) .= uri_encode_utf8 $$fragment;
 	}
 
-	$uri_obj;
+	bless \$path, ref $base;
 }
 
 BEGIN { delete $Catalyst::Plugin::CachedUriForAction::{'uri_encode_utf8'} }
