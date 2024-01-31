@@ -49,17 +49,17 @@ sub uri_for_action {
 	my $info = $cache->{ $action }
 		or Carp::croak "Can't find action for path '$action' in uri_for_action";
 
-	my ( $path, $base ) = '';
+	my ( $uri, $base ) = '';
 	if ( ref $c ) {
 		$base = $c->request->base;
-		$path = '/' if $$base !~ m!/\z!;
+		$uri = '/' if $$base !~ m!/\z!;
 	} else { # fallback if called as class method
 		$base = bless \( my $tmp = '' ), 'URI::_generic';
-		$path = '/';
+		$uri = '/';
 	}
 
 	my ( $n_caps, $n_args, $extra_parts ) = @$info;
-	$path .= $info->[-1];
+	$uri .= $info->[-1];
 
 	# this is not very sensical but it has to be like this because it is what Catalyst does:
 	# the :Args() case (i.e. any number of args) is grouped with the :Args(0) case (i.e. no args)
@@ -82,21 +82,21 @@ sub uri_for_action {
 			if ( @$captures + @_ ) != @$extra_parts;
 		# and now since @$extra_parts is exactly the same length as @$captures and @_ combined
 		# iterate over those arrays and use a cursor into @$extra_parts to interleave its elements
-		for ( @$captures ) { ( $path .= uri_encode_utf8 $_ ) .= $extra_parts->[ ++$i ] }
-		for ( @_ )         { ( $path .= uri_encode_utf8 $_ ) .= $extra_parts->[ ++$i ] }
+		for ( @$captures ) { ( $uri .= uri_encode_utf8 $_ ) .= $extra_parts->[ ++$i ] }
+		for ( @_ )         { ( $uri .= uri_encode_utf8 $_ ) .= $extra_parts->[ ++$i ] }
 	} else {
 		# in the slurpy case, the size of @$extra_parts is determined by $n_caps alone since $n_args was undef
 		# and as we checked above @$captures alone has at least length $n_caps
 		# so we will need all of @$captures to cover @$extra_parts, and may then still have some of it left over
 		# so iterate over @$extra_parts and use a cursor into @$captures to interleave its elements
-		for ( @$extra_parts )       { ( $path .= uri_encode_utf8 $captures->[ ++$i ] ) .= $_ }
+		for ( @$extra_parts )       { ( $uri .= uri_encode_utf8 $captures->[ ++$i ] ) .= $_ }
 		# and then append the rest of @$captures, and then everything from @_ after that
-		for ( ++$i .. $#$captures ) { ( $path .= '/' ) .= uri_encode_utf8 $captures->[ $_ ] }
-		for ( @_ )                  { ( $path .= '/' ) .= uri_encode_utf8 $_ }
+		for ( ++$i .. $#$captures ) { ( $uri .= '/' ) .= uri_encode_utf8 $captures->[ $_ ] }
+		for ( @_ )                  { ( $uri .= '/' ) .= uri_encode_utf8 $_ }
 	}
 
-	$path =~ s/%2B/+/g;
-	substr $path, 0, 0, $$base;
+	$uri =~ s/%2B/+/g;
+	substr $uri, 0, 0, $$base;
 
 	if ( defined $params ) {
 		my $query = '';
@@ -117,15 +117,15 @@ sub uri_for_action {
 		}
 		if ( '' ne $query ) {
 			$query =~ s/%20/+/g;
-			( $path .= '?' ) .= substr $query, length $delim;
+			( $uri .= '?' ) .= substr $query, length $delim;
 		}
 	}
 
 	if ( defined $fragment ) {
-		( $path .= '#' ) .= uri_encode_utf8 $$fragment;
+		( $uri .= '#' ) .= uri_encode_utf8 $$fragment;
 	}
 
-	bless \$path, ref $base;
+	bless \$uri, ref $base;
 }
 
 BEGIN { delete $Catalyst::Plugin::CachedUriForAction::{'uri_encode_utf8'} }
