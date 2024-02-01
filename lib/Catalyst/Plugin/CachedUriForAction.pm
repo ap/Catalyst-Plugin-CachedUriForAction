@@ -2,7 +2,7 @@ use 5.008005; use strict; use warnings;
 
 package Catalyst::Plugin::CachedUriForAction;
 
-our $VERSION = '1.004';
+our $VERSION = '1.005';
 
 use mro;
 use Carp ();
