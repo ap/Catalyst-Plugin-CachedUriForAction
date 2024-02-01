@@ -24,8 +24,8 @@ sub setup_finalize {
 
 		my $n_args = $xa->number_of_args; # might be undef to mean "any number"
 		my $tmpl = $c->uri_for( $action, [ ("\0\0\0\0") x $n_caps ], ("\0\0\0\0") x ( $n_args || 0 ) );
-		my @part = split /%00%00%00%00/, $tmpl, -1;
-		$cache->{ '/' . $action->reverse } = [ $n_caps, $n_args, ( shift @part ), \@part ];
+		my ( $prefix, @part ) = split /%00%00%00%00/, $tmpl, -1;
+		$cache->{ '/' . $action->reverse } = [ $n_caps, $n_args, \@part, $prefix ];
 	}
 }
 
@@ -48,7 +48,8 @@ sub uri_for_action {
 	my $info = $cache->{ $action }
 		or Carp::croak "Can't find action for path '$action' in uri_for_action";
 
-	my ( $n_caps, $n_args, $path, $extra_parts ) = @$info;
+	my ( $n_caps, $n_args, $extra_parts ) = @$info;
+	my $path = $info->[-1];
 
 	# this is not very sensical but it has to be like this because it is what Catalyst does:
 	# the :Args() case (i.e. any number of args) is grouped with the :Args(0) case (i.e. no args)
